@@ -58,11 +58,11 @@ class ThresholdGGMM(BaseInterface):
 
     def _gen_thresholded_map_filename(self):
         _, fname, ext = split_filename(self.inputs.stat_image)
-        return os.path.abspath(fname + "_thr" + ext)
+        return os.path.abspath(fname + "_thr.nii")
 
     def _gen_corrected_map_filename(self):
         _, fname, ext = split_filename(self.inputs.stat_image)
-        return os.path.abspath(fname + "_corr" + ext)
+        return os.path.abspath(fname + "_corr.nii")
 
     def _fit_model(self, masked_data, components, label):
         em = myEM(components)
@@ -160,7 +160,7 @@ class ThresholdGGMM(BaseInterface):
             else:
                 self._threshold = masked_data.max() + 1 #setting artificially high threshold
 
-        self._corrected_threshold = self._threshold + self._gaussian_mean
+        self._corrected_threshold = self._threshold - self._gaussian_mean
         #output = open(fname+'threshold.pkl', 'wb')
         #cPickle.dump(self._threshold, output)
         #output.close()
@@ -180,7 +180,7 @@ class ThresholdGGMM(BaseInterface):
         nifti.save(new_img, self._gen_thresholded_map_filename())
 
         corrected_data = data.copy()
-        corrected_data[mask > 0] += self._gaussian_mean
+        corrected_data[mask > 0] -= self._gaussian_mean
         new_img = nifti.Nifti1Image(corrected_data, img.get_affine(), img.get_header())
         nifti.save(new_img, self._gen_corrected_map_filename())
 
