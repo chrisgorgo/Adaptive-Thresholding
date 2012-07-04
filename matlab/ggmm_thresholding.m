@@ -15,6 +15,7 @@ function threshold = ggmm_thresholding(stat_filename, mask_filename)
         em.plot(stat_data);
         bic = em.BIC(stat_data);
         if bic < best_bic
+            best_bic = bic;
             best_model = em;
         end
     end
