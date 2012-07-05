@@ -1,4 +1,4 @@
-function [ output_args ] = topo_fdr_thresholding(spm_mat_file, con_index, cluster_forming_thr, thresDesc, use_topo_fdr, force_activation, cluster_extent_p_fdr_thr, stat_filename, height_threshold_type, extent_threshold)
+function topo_fdr_thresholding(spm_mat_file, con_index, cluster_forming_thr, thresDesc, use_topo_fdr, force_activation, cluster_extent_p_fdr_thr, stat_filename, height_threshold_type, extent_threshold)
 
     % con_index = 2;
     % cluster_forming_thr = 2.771290;

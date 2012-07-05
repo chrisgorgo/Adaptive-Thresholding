@@ -1,40 +1,61 @@
-function threshold = ggmm_thresholding(stat_filename, mask_filename)
+function [threshold,bic] = ggmm_thresholding(stat_filename, mask_filename)
+
+% read the data (spmT and mask), call the EM code and return the T value
+% for the cluster forming threshold
+%
+% FORMAT: [threshold,em,bic] = ggmm_thresholding(stat_filename, mask_filename)
+%
+% INPUT: stat_filename: full name (ie with path) of the spmT image
+%        mask_filename: full name (ie with path) of the mask image
+% 
+% OUTPUT: threshold: NaN if Gaussian only was found best model
+%                    one value X if positive Gamma was found best model,
+%                    two values X1 X2 if negative and positive Gamma was found best model,
+%         em: object that contains the models 
+%         bic: Bayesian information criteria of each model
+%
+% ------------------------------------------
+% Coded by Chris Gorgolewski 29 June 2012
+% Edited (help, outputs, etc) Cyril Pernet 4 July 2012
+
+
     mask_data = spm_read_vols(spm_vol(mask_filename));
     stat_data = spm_read_vols(spm_vol(stat_filename));
     stat_data = stat_data(mask_data > 0);
     no_signal_components = {Gaussian(0, 10)};
     noise_and_activation_components = {Gaussian(0, 10), Gamma(4, 5, 0)};
-    noise_activation_and_deactivation_components = {NegativeGamma(4,5, 0), Gaussian(0, 10), Gamma(4, 5, 0)};
+    noise_activation_and_deactivation_components = {Gaussian(0, 10), Gamma(4, 5, 0), NegativeGamma(4,5, 0)};
 
     models = {no_signal_components, noise_and_activation_components, noise_activation_and_deactivation_components};
     best_bic = inf;
 
+    figure('Name','Gamma-Gaussian mixture model of T voxel values');
     for i=1:length(models)
         em = ExpectationMaximization(models{i});
         em.fit(stat_data);
+        subplot(1,3,i);
         em.plot(stat_data);
-        bic = em.BIC(stat_data);
-        if bic < best_bic
-            best_bic = bic;
+        bic(i) = em.BIC(stat_data);
+        if bic(i) < best_bic
+            best_bic = bic(i);
             best_model = em;
         end
     end
 
     if size(best_model.components,2) == 1
-        fprintf('No signal found!\n')
-        return
+        fprintf('Best model is Gaussian only, ie no signal was found!\n')
+        threshold = NaN; 
     elseif size(best_model.components,2) == 2
+        fprintf('Best model is Gaussian + Positive Gamma\n')
         pp = best_model.posteriors(stat_data);
         active_map = (pp(:, 2) > pp(:, 1)) & stat_data > 0.01;
+        threshold = min(stat_data(active_map));
     elseif size(best_model.components,2) == 3
+        fprintf('Best model is Negative Gamma + Gaussian + Positive Gamma\n')
         pp = best_model.posteriors(stat_data);
-        active_map = (pp(:, 3) > pp(:, 2)) & stat_data > 0.01;
+        active_map = (pp(:, 2) > pp(:, 1)) & stat_data > 0.01;
+        deactive_map = (pp(:, 3) > pp(:, 1)) & stat_data < 0.01;
+        threshold = [max(stat_data(deactive_map)) min(stat_data(active_map))];
     end
 
-    threshold = min(stat_data(active_map));
-
-    if length(threshold) == 0
-        fprintf('No signal found!\n')
-        return
-    end
 end

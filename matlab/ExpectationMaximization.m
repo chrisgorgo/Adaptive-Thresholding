@@ -53,18 +53,27 @@ classdef ExpectationMaximization < handle
                 fprintf('log likelihood = %f, improv = %f, iter = %d\n',obj.loglikelihood(data), improv, i)
             end
         end
+        
         function plot(obj, data)
-            figure();
-            hold all;
-            histnorm(data,50)
+            hold all; histnorm(data,50); colormap([.5 .5 1]);
             x = linspace(min(data), max(data), 1000);
             pdf_sum = zeros(1, length(x));
             for i=1:length(obj.components)
-                plot(x, obj.components{i}.pdf(x).*obj.mix(i));
+                 if i == 1; c = 'r'; elseif i ==2; c ='g'; else  c = 'y'; end
+                plot(x, obj.components{i}.pdf(x).*obj.mix(i),c,'Linewidth',3);
                 pdf_sum = pdf_sum + obj.components{i}.pdf(x).*obj.mix(i);
             end
-            plot(x, pdf_sum);
-            hold off
+            plot(x, pdf_sum,'--k','LineWidth',2); 
+            
+            if size(obj.components,2) == 1
+                mytitle = sprintf('Gaussian only \n BIC=%g', obj.BIC(data));
+            elseif size(obj.components,2) == 2
+                mytitle = sprintf('Gaussian & Gamma \n BIC=%g', obj.BIC(data));
+            elseif size(obj.components,2) == 3
+                mytitle = sprintf('Gaussian & +/-Gamma \n BIC=%g', obj.BIC(data));
+            end
+            title(mytitle,'Fontsize',16);
+            grid on; hold off
         end
     end
     
