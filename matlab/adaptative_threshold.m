@@ -24,7 +24,7 @@ function T = adaptative_threshold(varargin)
 %
 % This code is an adaptation of the python code xxxx available with Nipype.
 % Reference: Gorgolewski et al. Adaptive thresholding for reliable single
-% subject fMRI analysis. HBM (submitted)
+% subject fMRI analysis. Frontiers in Human Neuroscience (submitted)
 %
 % see also ggmm_thresholding topo_fdr_thresholding
 % ------------------------------------------------
