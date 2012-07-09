@@ -1,5 +1,5 @@
 % This code was ported from the nipy project (http://nipy.org) and was
-% originally contrributed by Bertrand Thirion
+% originally contrributed by Bertrand Thirion - returns gamma parameters
 
 function [shape, scale] = gam_param(data, weights)
     eps = 1.e-5;

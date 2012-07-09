@@ -11,7 +11,6 @@ function [threshold,bic] = ggmm_thresholding(stat_filename, mask_filename)
 % OUTPUT: threshold: NaN if Gaussian only was found best model
 %                    one value X if positive Gamma was found best model,
 %                    two values X1 X2 if negative and positive Gamma was found best model,
-%         em: object that contains the models 
 %         bic: Bayesian information criteria of each model
 %
 % ------------------------------------------

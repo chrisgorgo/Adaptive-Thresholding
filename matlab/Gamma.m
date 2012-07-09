@@ -1,3 +1,5 @@
+% create Gamma model
+
 classdef Gamma < Distribution
     properties
         shape

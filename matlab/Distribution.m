@@ -1,3 +1,4 @@
+% update the object with the type of distribution to fit
 classdef Distribution < handle
     properties(Constant,Abstract)
         free_parameters

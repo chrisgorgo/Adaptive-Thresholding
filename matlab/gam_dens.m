@@ -1,6 +1,6 @@
 function ng = gam_dens(shape, scale, data)
 % This code was ported from the nipy project (http://nipy.org) and was
-% originally contrributed by Bertrand Thirion
+% originally contrributed by Bertrand Thirion - returns the gamma density
     ng = zeros(size(data));
     cst = - shape * log(scale) - gammaln(shape);
     i = data > 0;

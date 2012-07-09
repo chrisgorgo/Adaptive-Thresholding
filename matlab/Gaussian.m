@@ -1,3 +1,5 @@
+% create Gaussian model
+
 classdef Gaussian < Distribution
     properties
         mu = 0

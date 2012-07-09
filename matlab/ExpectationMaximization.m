@@ -1,3 +1,4 @@
+% EM algorithm, bic and plot
 classdef ExpectationMaximization < handle
     properties
         components
@@ -6,11 +7,13 @@ classdef ExpectationMaximization < handle
     methods
         
         function obj = ExpectationMaximization(components)
+            % update the model component
             obj.components = components;
             obj.mix = ones(1,length(obj.components)) * 1 / length(obj.components);
         end
         
         function posteriors = posteriors(obj, data)
+            % update the model posterior prob. of the data given the model
             posteriors = zeros(length(data), length(obj.components));
             for i=1:length(obj.components)
                 posteriors(:, i) = obj.components{i}.pdf(data);
@@ -20,12 +23,14 @@ classdef ExpectationMaximization < handle
         end
         
         function ll = loglikelihood(obj, data)
+            % likelihood of the posterior
             likelihood = obj.posteriors(data);
             sum_likelihood = sum(likelihood,2);
         	ll = sum(log(sum_likelihood));
         end
 
         function bic = BIC(obj, data)
+            % Bayesian information criterion
             k = 0;
             for i=1:length(obj.components)
                 k = k + obj.components{i}.free_parameters;
@@ -34,6 +39,7 @@ classdef ExpectationMaximization < handle
         end
 
         function fit(obj, data)
+            % fit the model to the data
             maxiter=100;
             min_improvement=1.e-4;
             prev_loglike = 0;
@@ -55,6 +61,7 @@ classdef ExpectationMaximization < handle
         end
         
         function plot(obj, data)
+            % plot the data (histrogram) and the model
             hold all; histnorm(data,50); colormap([.5 .5 1]);
             x = linspace(min(data), max(data), 1000);
             pdf_sum = zeros(1, length(x));

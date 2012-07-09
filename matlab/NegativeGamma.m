@@ -1,3 +1,5 @@
+% create the negative Gamma model
+
 classdef NegativeGamma < Gamma
 
     methods

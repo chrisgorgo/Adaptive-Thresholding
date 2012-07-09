@@ -1,4 +1,4 @@
-function varargout = adaptative_threshold(varargin)
+function T = adaptative_threshold(varargin)
 
 % evaluate from an SPM T map the mixing distributions corresponding to the 
 % null hypothesis (in theory a Gaussian centred on 0, but the algorithms 
@@ -7,7 +7,7 @@ function varargout = adaptative_threshold(varargin)
 % done, the uncorrected p value to be used in spm/results is returned -
 % results can be then evaluated based on the FDR extend cluster threshold
 % 
-% FORMAT: [p,T] = adaptative_threhold(P,SPM)
+% FORMAT: T = adaptative_threhold(P,SPM)
 %
 % INPUT: - this can be left empty and the user is prompted to pick an image,
 %        and the flag will be set to 1
@@ -26,6 +26,8 @@ function varargout = adaptative_threshold(varargin)
 % Reference: Gorgolewski et al. Adaptive thresholding for reliable single
 % subject fMRI analysis. HBM (submitted)
 %
+% see also ggmm_thresholding topo_fdr_thresholding
+% ------------------------------------------------
 % Cyril Pernet and Chris Gorgolewski v1 - July 2012
 
 %% check inputs/outputs
@@ -116,17 +118,12 @@ if (winner == 2 || winner == 3) && ~isempty(threshold)
     % p = 1-tcdf(threshold,dfe);
     if nargout == 0
         msgbox(['For cluster inference using FDR you can set the T threashold @ ' num2str(threshold) ' (set p value adjustment to no) - only clusters with corrected p values must be used'],'Cluter forming threshold','help')
-    elseif nargout == 1
-        varargout{1} = p;
-    elseif nargout == 2
-        varargout{1} = p;
-        varargout{2} = threshold;
-    elseif nargout == 3
-        varargout{1} = p;
-        varargout{2} = threshold;
+    else
+        T = threshold;
     end
 else
     msgbox('there is no evidence for a positive signal','Cluter forming threshold','warn')
+    T = NaN;
 end
 
 
