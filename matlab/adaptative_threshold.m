@@ -22,9 +22,10 @@ function T = adaptative_threshold(varargin)
 %         mixture models (Gaussian only, Gaussian and positive Gamma,
 %         Gaussian and positive and negative Gamma)
 %
-% This code is an adaptation of the python code xxxx available with Nipype.
-% Reference: Gorgolewski et al. Adaptive thresholding for reliable single
-% subject fMRI analysis. Frontiers in Human Neuroscience (submitted)
+% This code is an adaptation of the python code.
+% Reference: Gorgolewski KJ, Storkey AJ, Bastin ME and Pernet CR (2012) 
+% Adaptive thresholding for reliable topological inference in single subject 
+% fMRI analysis. Front. Hum. Neurosci. 6:245. doi: 10.3389/fnhum.2012.00245
 %
 % see also ggmm_thresholding topo_fdr_thresholding
 % ------------------------------------------------
