@@ -1,4 +1,4 @@
-function [threshold,bic] = ggmm_thresholding(stat_filename, mask_filename)
+function [threshold,bic] = ggmm_thresholding(stat_filename, mask_filename, plots)
 
 % read the data (spmT and mask), call the EM code and return the T value
 % for the cluster forming threshold
@@ -7,6 +7,7 @@ function [threshold,bic] = ggmm_thresholding(stat_filename, mask_filename)
 %
 % INPUT: stat_filename: full name (ie with path) of the spmT image
 %        mask_filename: full name (ie with path) of the mask image
+%        plots:         set to 1 if you want plots
 % 
 % OUTPUT: threshold: NaN if Gaussian only was found best model
 %                    one value X if positive Gamma was found best model,
@@ -16,6 +17,9 @@ function [threshold,bic] = ggmm_thresholding(stat_filename, mask_filename)
 % ------------------------------------------
 % Coded by Chris Gorgolewski 29 June 2012
 % Edited (help, outputs, etc) Cyril Pernet 4 July 2012
+if nargin <= 2
+   plots = 1; 
+end
 
 
     mask_data = spm_read_vols(spm_vol(mask_filename));
@@ -27,20 +31,21 @@ function [threshold,bic] = ggmm_thresholding(stat_filename, mask_filename)
 
     models = {no_signal_components, noise_and_activation_components, noise_activation_and_deactivation_components};
     best_bic = inf;
-
-    figure('Name','Gamma-Gaussian mixture model of T voxel values');
-    for i=1:length(models)
-        em = ExpectationMaximization(models{i});
-        em.fit(stat_data);
-        subplot(1,3,i);
-        em.plot(stat_data);
-        bic(i) = em.BIC(stat_data);
-        if bic(i) < best_bic
-            best_bic = bic(i);
-            best_model = em;
+    if plots == 1
+        figure('Name','Gamma-Gaussian mixture model of T voxel values');
+        for i=1:length(models)
+            em = ExpectationMaximization(models{i});
+            em.fit(stat_data);
+            subplot(1,3,i);
+            em.plot(stat_data);
+            bic(i) = em.BIC(stat_data);
+            if bic(i) < best_bic
+                best_bic = bic(i);
+                best_model = em;
+            end
         end
     end
-
+    
     if size(best_model.components,2) == 1
         fprintf('Best model is Gaussian only, ie no signal was found!\n')
         threshold = NaN; 
