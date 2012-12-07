@@ -106,6 +106,7 @@ end
 % ------------------------------------------
 
 [threshold,bic] = ggmm_thresholding(P, mask_name);
+threshold = threshold(threshold > 0);
 [value,winner] = min(bic);
 
 
