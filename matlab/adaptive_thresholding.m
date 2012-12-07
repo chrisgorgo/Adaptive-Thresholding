@@ -15,6 +15,24 @@ function adaptive_thresholding(stat_filename, mask_filename, spm_mat_file, con_i
 % ------------------------------------------
 % Chris Gorgolewski 29 June 2012
 
+% check inputs
+  if nargin == 0
+      stat_filename = spm_select(1, 'image', 'Select spmT-map', [], pwd, 'spmT*.*');
+  end;
+  
+  if nargin <= 1
+      
+      % deriving other information from first input
+      [p, nm, e, ~] = spm_fileparts(stat_filename);
+      
+      mask_filename = [p filesep 'mask' e];
+
+      spm_mat_file  = [p filesep 'SPM.mat'];
+      
+      con_index     = str2num(nm(end-3:end));
+      
+  end;
+
 
 [thr,bic] = ggmm_thresholding(stat_filename, mask_filename);
 thr = thr(thr > 0);
