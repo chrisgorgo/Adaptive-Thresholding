@@ -156,8 +156,9 @@ class NegativeGaussianComponent(object):
 
 class EM(object):
 
-    def __init__(self, components):
+    def __init__(self, components, mix_type="multi"):
         self.components = components
+        self._mix_type = mix_type
 
 
     def _E(self, data):
@@ -180,7 +181,10 @@ class EM(object):
                             break
 
                 component.fit_weighted(data, resp[:, i])
-                self.mix[i] = resp[:, i].sum() / resp[:, i].size
+                if self._mix_type == "multi":
+                    self.mix[:,i] = resp[:, i]/(resp[:, i].sum(axis=2))
+                else: 
+                    self.mix[:,i] = resp[:, i].sum() / resp[:, i].size
 #                print self.mix[i]
 
     def loglikelihood(self, data):
@@ -204,7 +208,10 @@ class EM(object):
         return -2.*self.loglikelihood(data) + k * np.log(data.size)
 
     def fit(self, data, maxiter=100, min_improvement=1.e-4):
-        self.mix = np.ones(len(self.components)) * 1 / len(self.components)
+        if self._mix_type == "multi":
+            self.mix = np.ones((len(data),len(self.components))) * 1 / len(self.components)
+        else:
+            self.mix = np.ones(len(self.components)) * 1 / len(self.components)
         prev_loglike = 0
 
 #        xRange = np.arange(math.floor(min(data)), math.ceil(max(data)), 0.1)
