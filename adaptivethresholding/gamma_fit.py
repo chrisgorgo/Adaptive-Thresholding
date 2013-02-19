@@ -182,9 +182,9 @@ class EM(object):
 
                 component.fit_weighted(data, resp[:, i])
                 if self._mix_type == "multi":
-                    self.mix[:,i] = resp[:, i]/(resp[:, i].sum(axis=2))
+                    self.mix[:,i] = resp[:, i]
                 else: 
-                    self.mix[:,i] = resp[:, i].sum() / resp[:, i].size
+                    self.mix[i] = resp[:, i].sum() / resp[:, i].size
 #                print self.mix[i]
 
     def loglikelihood(self, data):
