@@ -187,7 +187,7 @@ class EM(object):
                 component.fit_weighted(data, resp[:, i])
                 if self._mix_type == "multi":
                     if len(self._prior_map) > 0:
-                        self.mix[:,i] = self._prior_weight*self._prior_map + (1-self._prior_weight)*gaussian_filter(resp[:, i].reshape(self._shape),self._resp_smooth_sigma).flatten()
+                        self.mix[:,i] = self._prior_weight*self._prior_map[:,i] + (1-self._prior_weight)*gaussian_filter(resp[:, i].reshape(self._shape),self._resp_smooth_sigma).flatten()
                     else:
                         self.mix[:,i] = resp[:, i]
                 else:
