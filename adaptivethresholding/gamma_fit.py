@@ -11,6 +11,7 @@ import math
 from nipy.algorithms.clustering.ggmixture import _gam_param
 import pylab as plt
 from copy import deepcopy
+from scipy.ndimage.filters import gaussian_filter
 
 def opt_func(param, x, resp):
     return -np.sum(np.log(gamma.pdf(x, param[0], scale=param[1])) * resp, axis=0)
@@ -156,9 +157,12 @@ class NegativeGaussianComponent(object):
 
 class EM(object):
 
-    def __init__(self, components, mix_type="multi"):
+    def __init__(self, components, mix_type="multi", prior_map=[], prior_weight = 0.5, resp_smooth_sigma=0):
         self.components = components
         self._mix_type = mix_type
+        self._prior_map = prior_map
+        self._prior_weight = prior_weight
+        self._resp_smooth_sigma = resp_smooth_sigma
 
 
     def _E(self, data):
@@ -182,8 +186,11 @@ class EM(object):
 
                 component.fit_weighted(data, resp[:, i])
                 if self._mix_type == "multi":
-                    self.mix[:,i] = resp[:, i]
-                else: 
+                    if len(self._prior_map) > 0:
+                        self.mix[:,i] = self._prior_weight*self._prior_map + (1-self._prior_weight)*gaussian_filter(resp[:, i].reshape(self._shape),self._resp_smooth_sigma).flatten()
+                    else:
+                        self.mix[:,i] = resp[:, i]
+                else:
                     self.mix[i] = resp[:, i].sum() / resp[:, i].size
 #                print self.mix[i]
 
@@ -208,6 +215,9 @@ class EM(object):
         return -2.*self.loglikelihood(data) + k * np.log(data.size)
 
     def fit(self, data, maxiter=100, min_improvement=1.e-4):
+        self._shape = data.shape
+        data = data.flatten()
+        
         if self._mix_type == "multi":
             self.mix = np.ones((len(data),len(self.components))) * 1 / len(self.components)
         else:
