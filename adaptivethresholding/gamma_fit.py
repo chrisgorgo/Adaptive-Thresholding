@@ -157,21 +157,21 @@ class NegativeGaussianComponent(object):
 
 class EM(object):
 
-    def __init__(self, components, mix_type="multi", prior_map=[], prior_weight = 0.5, resp_smooth_sigma=0):
+    def __init__(self, components, weights=[]):
         self.components = components
-        self._mix_type = mix_type
-        self._prior_map = prior_map
-        self._prior_weight = prior_weight
-        self._resp_smooth_sigma = resp_smooth_sigma
+        self._weights = weights
+        self.mix = np.ones(len(self.components)) * 1 / len(self.components)
 
 
     def _E(self, data):
             resp = self.posteriors(data)
             resp_sum = resp.sum(axis=1)
+            resp_sum[resp_sum == 0] = 1
             resp = resp / np.tile(resp_sum.reshape(-1, 1), len(self.components))
             return resp
 
     def _M(self, data, resp):
+                        
             for i, component in enumerate(self.components):
                 if (isinstance(component, NegativeGammaComponent) or isinstance(component, GammaComponent)):
                     for c in self.components:
@@ -183,27 +183,24 @@ class EM(object):
                         if isinstance(c, GaussianComponent):
                             component.limit = c.mu
                             break
-
+                
                 component.fit_weighted(data, resp[:, i])
-                if self._mix_type == "multi":
-                    if len(self._prior_map) > 0:
-                        self.mix[:,i] = self._prior_weight*self._prior_map[:,i] + (1-self._prior_weight)*gaussian_filter(resp[:, i].reshape(self._shape),self._resp_smooth_sigma).flatten()
-                    else:
-                        self.mix[:,i] = resp[:, i]
-                else:
-                    self.mix[i] = resp[:, i].sum() / resp[:, i].size
+                    
+                self.mix[i] = resp[:, i].sum() / resp.sum()
 #                print self.mix[i]
 
     def loglikelihood(self, data):
         likelihood = self.posteriors(data)
         sum_likelihood = likelihood.sum(axis=1)
 
-        return np.sum(np.log(sum_likelihood))
+        return np.sum(np.log(sum_likelihood[sum_likelihood != 0]))
 
     def posteriors(self, data):
         posteriors = np.zeros((data.size, len(self.components)))
         for i, component in enumerate(self.components):
             posteriors[:, i] = component.pdf(data)
+            if len(self._weights) > 0:
+                posteriors[:, i] *= self._weights.flatten()
         posteriors[np.isnan(posteriors)] = 0
         posteriors = posteriors * self.mix
         return posteriors
@@ -218,10 +215,7 @@ class EM(object):
         self._shape = data.shape
         data = data.flatten()
         
-        if self._mix_type == "multi":
-            self.mix = np.ones((len(data),len(self.components))) * 1 / len(self.components)
-        else:
-            self.mix = np.ones(len(self.components)) * 1 / len(self.components)
+
         prev_loglike = 0
 
 #        xRange = np.arange(math.floor(min(data)), math.ceil(max(data)), 0.1)
