@@ -93,12 +93,26 @@ class GaussianComponent(object):
 
     def pdf(self, data):
         #print self.sigma
-        return norm.pdf(data, loc=self.mu, scale=math.sqrt(self.sigma))
+        pdf = np.zeros(data.shape)
+        pdf[:len(data)/2] = norm.pdf(data[:len(data)/2], loc=self.mu, scale=math.sqrt(self.sigma))
+        pdf[len(data)/2:] = norm.pdf(data[len(data)/2:], loc=self.mu, scale=math.sqrt(self.sigma))
+        return pdf
 
     def fit_weighted(self, data, weights):
         weights_sum = weights.sum()
+        print "fitting mu"
         self.mu = np.sum(data * weights) / weights_sum
+        print "fitting sigma"
         self.sigma = np.sum((data - self.mu) ** 2 * weights) / weights_sum
+        
+    def __unicode__(self):
+        return "<GaussianComponent(mu = %g, sigma = %g)>"%(self.mu, self.sigma)
+    
+    def __str__(self):
+        return self.__unicode__().encode('utf-8')
+    
+    def __repr__(self):
+        return self.__unicode__().encode('utf-8')
 
 class FixedMeanGaussianComponent(object):
 
@@ -161,6 +175,7 @@ class EM(object):
         self.components = components
         self._weights = weights
         self.mix = np.ones(len(self.components)) * 1 / len(self.components)
+        self._reset_posteriors = True
 
 
     def _E(self, data):
@@ -187,23 +202,33 @@ class EM(object):
                 component.fit_weighted(data, resp[:, i])
                     
                 self.mix[i] = resp[:, i].sum() / resp.sum()
+            self._reset_posteriors = True
 #                print self.mix[i]
 
     def loglikelihood(self, data):
         likelihood = self.posteriors(data)
         sum_likelihood = likelihood.sum(axis=1)
-
-        return np.sum(np.log(sum_likelihood[sum_likelihood != 0]))
+        
+        # turn into a weighted sum
+        if len(self._weights) > 0:
+            return np.sum(np.log(sum_likelihood[self._weights.flatten() != 0])*self._weights.flatten()[self._weights.flatten() != 0])
+        else:
+            return np.sum(np.log(sum_likelihood))
 
     def posteriors(self, data):
-        posteriors = np.zeros((data.size, len(self.components)))
-        for i, component in enumerate(self.components):
-            posteriors[:, i] = component.pdf(data)
-            if len(self._weights) > 0:
-                posteriors[:, i] *= self._weights.flatten()
-        posteriors[np.isnan(posteriors)] = 0
-        posteriors = posteriors * self.mix
-        return posteriors
+        if self._reset_posteriors == True:
+            print "calculating posteriors"
+            self._posteriors = np.zeros((data.size, len(self.components)))
+            for i, component in enumerate(self.components):
+                print "calculating pdf for component %d"%i
+                self._posteriors[:, i] = component.pdf(data)
+                if len(self._weights) > 0:
+                    print "weighting pdf for component %d"%i
+                    self._posteriors[:, i] *= self._weights.flatten()
+            self._posteriors[np.isnan(self._posteriors)] = 0
+            self._posteriors = self._posteriors * self.mix
+            self._reset_posteriors = False
+        return self._posteriors
 
     def BIC(self, data):
         k = 0
@@ -233,10 +258,13 @@ class EM(object):
 #            plt.plot(xRange, pdf_sum)
 
 #    
+            print "E step"
             resp = self._E(data)
             #print resp.sum(axis=1).min()
+            print "M step"
             self._M(data, resp)
-
+            
+            print "calculating loglikelihood"
             cur_loglike = self.loglikelihood(data)
             improv = cur_loglike - prev_loglike
             if i != 0 and improv <= min_improvement:
@@ -245,7 +273,9 @@ class EM(object):
             prev_loglike = cur_loglike
 #            if i == 65:
 #                plt.show()
-            print "log likelihood = %f, improv = %f, iter = %d" % (self.loglikelihood(data), improv, i)
+            print "log likelihood = %f, improv = %f, iter = %d" % (cur_loglike, improv, i)
+            print self.components
+            print self.mix
 #        plt.show()
 
 if __name__ == '__main__':
